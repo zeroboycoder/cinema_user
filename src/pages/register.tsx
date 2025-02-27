@@ -15,6 +15,7 @@ const Register = () => {
         manual: true,
     });
 
+    const [name, setName] = useSafeState('');
     const [email, setUserName] = useSafeState('');
     const [password, setPassword] = useSafeState('');
     const [isToggle,setIsToggle] = useSafeState(true)
@@ -27,13 +28,14 @@ const Register = () => {
                     <img src="/images/cinema.png" width={50} height={50} alt="" />
                     <h1 className="text-3xl font-bold">Create</h1>
                 </div>
-                <Input onChange={(e) => setUserName(e.target.value)} placeholder="Username" className="mt-4" size="lg" />
+                <Input onChange={(e) => setName(e.target.value)} placeholder="Name" className="mt-4" size="lg" />
+                <Input onChange={(e) => setUserName(e.target.value)} placeholder="Email" className="mt-4" size="lg" />
                 <Input type={
                      isToggle ? "text" : "password"
                 } onChange={(e) => setPassword(e.target.value)} endContent={<span  className="cursor-pointer">{isToggle ? <span onClick={()=>setIsToggle(false)}><EyeOff/></span> : <span onClick={()=>setIsToggle(true)}><Eye/></span> }</span>} placeholder="Password" className="mt-4" size="lg" />
                 <p className="mt-4 text-white text-sm text-center">Already exist Account ? <span className="text-primary cursor-pointer" onClick={()=>navigate('/login')}>Login</span></p>
                 <div className="mt-4">
-                    <Button isLoading={loading} className={button({ color: "primary", variant: "shadow", radius: "lg", className: "w-full" })} onClick={() => lazyToast(registerApi({ email, password }), {
+                    <Button isLoading={loading} className={button({ color: "primary", variant: "shadow", radius: "lg", className: "w-full" })} onClick={() => lazyToast(registerApi({ name, email, password }), {
                         loading: "Register",
                         error: (err) => errorMessageResolver(err),
                         success: (res) => {

@@ -37,7 +37,7 @@ export const Navbar = () => {
 
   return (
     <div className="bg-[#1D273A]">
-         <HeroUINavbar maxWidth="xl" position="sticky">
+      <HeroUINavbar maxWidth="xl" position="sticky">
       <NavbarContent
         className="hidden sm:flex basis-1/5 sm:basis-full"
         justify="start"

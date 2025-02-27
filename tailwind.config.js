@@ -45,11 +45,7 @@ module.exports = {
                   medium: "0.45rem", 
                   large: "0.45rem", 
                 },
-                borderWidth: {
-                  small: "1px", 
-                  medium: "2px", 
-                  large: "3px", 
-                },
+               
               },
               colors:{
                  background:'#1A2232',

@@ -1,12 +1,15 @@
+import { seataAtom, seatbAtom, seatcAtom, seatdAtom, seateAtom, seatfAtom } from "@/atom/data"
 import BackButton from "@/components/backButton"
 import DefaultLayout from "@/layouts/default"
 import { useSeat } from "@/machine/useSeat"
 import { seatList } from "@/services/api"
 import { Button } from "@heroui/button"
-import { button } from "@heroui/theme"
+import { button, menuItem } from "@heroui/theme"
 import { useRequest, useSafeState } from "ahooks"
+import { useAtom } from "jotai"
+import { useQueryState } from "nuqs"
 import { useEffect } from "react"
-import { useLocation, useNavigate } from "react-router-dom"
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
 
 const ChooseSeat = () => {
     // const seat =[{
@@ -70,36 +73,40 @@ const ChooseSeat = () => {
     const [allSeatListE, setSeatListE] = useSafeState(seat)
     const [allSeatListF, setSeatListF] = useSafeState(seat)
 
+    const [seatA, setSeatA] = useAtom<any>(seataAtom);
+    const [seatB, setSeatB] = useAtom<any>(seatbAtom);
+    const [seatC, setSeatC] = useAtom<any>(seatcAtom);
+    const [seatD, setSeatD] = useAtom<any>(seatdAtom);
+    const [seatE, setSeatE] = useAtom<any>(seateAtom);
+    const [seatF, setSeatF] = useAtom<any>(seatfAtom);
 
-    const [seatA, setSeatA] = useSafeState<any>([]);
-    const [seatB, setSeatB] = useSafeState<any>([]);
-    const [seatC, setSeatC] = useSafeState<any>([]);
-    const [seatD, setSeatD] = useSafeState<any>([]);
-    const [seatE, setSeatE] = useSafeState<any>([]);
-    const [seatF, setSeatF] = useSafeState<any>([]);
-
-
-    const {handleSeat:handleSeating,handleSeatFilter} = useSeat(s=>s);
+    const [bookid] = useQueryState('booking_id',{
+        defaultValue:""
+    })
+    const { handleSeat: handleSeating, handleSeatFilter ,seating ,handleClearSeat  } = useSeat(s => s);
 
     const navigate = useNavigate();
-
     const location = useLocation();
+    const [searchParams,]= useSearchParams()
 
-    const { runAsync } = useRequest(() => seatList(location.state), {
+    const { runAsync } = useRequest(() => seatList(location.state, searchParams.get("movieDateId")), {
         cacheKey: `seat-list${location.state}`, manual: true
     });
 
+    console.log(seating,"I am seating")
+
     useEffect(() => {
         runAsync().then(async (res) => {
-
-             setSeatListA(allSeatListA.map((seat) => {
-                 return {
-                     ...seat,
-                     isHas: res.includes(`${seat.seat}A`)
-                 };
-             }));
-
-             setSeatListB(allSeatListB.map((seat) => {
+            if (res.length == 0) {
+                return
+            }
+            setSeatListA(allSeatListA.map((seat) => {
+                return {
+                    ...seat,
+                    isHas: res.includes(`${seat.seat}A`)
+                };
+            }));
+            setSeatListB(allSeatListB.map((seat) => {
                 return {
                     ...seat,
                     isHas: res.includes(`${seat.seat}B`)
@@ -136,9 +143,7 @@ const ChooseSeat = () => {
                         seat: test.replace('A', "")
                     }
                 }
-
             })
-
             const b = res.map((test: any) => {
                 if (test.includes("B")) {
                     return {
@@ -179,39 +184,36 @@ const ChooseSeat = () => {
                         seat: test.replace('F', '')
                     }
                 }
-            })
-
-            setSeatA(a.includes(undefined) ? [] : a);
-            setSeatB(b.includes(undefined) ? [] : b);
-            setSeatC(c.includes(undefined) ? [] : c);
-            setSeatD(d.includes(undefined) ? [] : d);
-            setSeatE(e.includes(undefined) ? [] : e);
-            setSeatF(f.includes(undefined) ? [] : f);
+            });
+            setSeatA([...seatA, ...a.filter((item) => item !== undefined)]);
+            setSeatB([...seatB, ...b.filter((item) => item !== undefined)]);
+            setSeatC([...seatC, ...c.filter((item) => item !== undefined)]);
+            setSeatD([...seatD, ...d.filter((item) => item !== undefined)]);
+            setSeatE([...seatE, ...e.filter((item) => item !== undefined)]);
+            setSeatF([...seatF, ...f.filter((item) => item !== undefined)]);
         })
     }, [])
 
-    console.log(seatC, "seatC")
-    const handleSeat = (seat: any, item: any) => {
 
+    const handleSeat = (seat: any, item: any) => {
         if (seat === "A") {
             if (seatA.some((seat: any) => seat?.seat == item?.seat)) {
-                 handleSeatFilter({...item,seat:`${item.seat}A`})
+                handleSeatFilter({ ...item, seat: `${item.seat}A` })
                 setSeatA(seatA.filter((seat: any) => seat?.seat !== item.seat))
                 return
             } else {
-                handleSeating({...item,seat:`${item.seat}A`})
+                handleSeating({ ...item, seat: `${item.seat}A` })
                 setSeatA([...seatA, item])
             }
         }
         if (seat === "B") {
             if (seatB.some((seat: any) => seat?.seat == item?.seat)) {
-                handleSeatFilter({...item,seat:`${item.seat}B`})
+                handleSeatFilter({ ...item, seat: `${item.seat}B` })
 
                 setSeatB(seatB.filter((seat: any) => seat?.seat !== item?.seat))
                 return
             } else {
-                handleSeating({...item,seat:`${item.seat}B`})
-
+                handleSeating({ ...item, seat: `${item.seat}B` })
                 setSeatB([...seatB, item])
             }
 
@@ -219,40 +221,40 @@ const ChooseSeat = () => {
         if (seat === "C") {
             if (seatC.some((seat: any) => seat?.seat == item?.seat)) {
                 setSeatC(seatC.filter((seat: any) => seat?.seat !== item?.seat))
-                handleSeatFilter({...item,seat:`${item.seat}C`})
+                handleSeatFilter({ ...item, seat: `${item.seat}C` })
                 return
             } else {
-                setSeatC([...seatC,item])
-                handleSeating({...item,seat:`${item.seat}C`})
+                setSeatC([...seatC, item])
+                handleSeating({ ...item, seat: `${item.seat}C` })
             }
         }
         if (seat === "D") {
             if (seatD.some((seat: any) => seat?.seat == item?.seat)) {
-                handleSeatFilter({...item,seat:`${item.seat}D`})
+                handleSeatFilter({ ...item, seat: `${item.seat}D` })
                 setSeatD(seatD.filter((seat: any) => seat?.seat !== item?.seat))
                 return
             } else {
-                handleSeating({...item,seat:`${item.seat}D`})
+                handleSeating({ ...item, seat: `${item.seat}D` })
                 setSeatD([...seatD, item])
             }
         }
         if (seat === "E") {
             if (seatE.some((seat: any) => seat?.seat == item?.seat)) {
-                handleSeatFilter({...item,seat:`${item.seat}E`})
+                handleSeatFilter({ ...item, seat: `${item.seat}E` })
                 setSeatE(seatE.filter((seat: any) => seat?.seat !== item?.seat))
                 return
             } else {
-                handleSeating({...item,seat:`${item.seat}A`})
+                handleSeating({ ...item, seat: `${item.seat}E` })
                 setSeatE([...seatE, item])
             }
         }
         if (seat === "F") {
             if (seatF.some((seat: any) => seat?.seat == item?.seat)) {
-                handleSeatFilter({...item,seat:`${item.seat}F`})
+                handleSeatFilter({ ...item, seat: `${item.seat}F` })
                 setSeatF(seatF.filter((seat: any) => seat?.seat !== item?.seat))
                 return
             } else {
-                handleSeating({...item,seat:`${item.seat}F`})
+                handleSeating({ ...item, seat: `${item.seat}F` })
                 setSeatF([...seatF, item])
             }
         }
@@ -262,7 +264,27 @@ const ChooseSeat = () => {
         <DefaultLayout>
             <div className="flex  justify-between ">
                 <h1 className="text-2xl font-bold mb-10">Choose Seat</h1>
-                <BackButton />
+
+                <Button
+                    onClick={() => {
+                        handleClearSeat()
+                        setSeatA([]);
+                        setSeatB([]);
+                        setSeatC([]);
+                        setSeatD([]);
+                        setSeatE([]);
+                        setSeatF([]);
+                        navigate(-1)
+                    }}
+                    className={
+                        button({
+                            color: "primary",
+                            radius: "lg",
+                            variant: "shadow"
+                        })
+                    }>
+                    Back
+                </Button>
             </div>
             <div>
 
@@ -272,11 +294,8 @@ const ChooseSeat = () => {
                             <div key={index} className="relative" >
                                 <Button
                                     disabled={item?.isHas}
-                                    isLoading={item?.isHas}
                                     onClick={() => {
-
                                         handleSeat("A", item)
-
                                     }}
                                     style={{
                                         cursor: "pointer",
@@ -286,7 +305,7 @@ const ChooseSeat = () => {
                                         variant: "shadow",
                                         radius: "full",
                                         size: "sm",
-
+                                        className: "disabled:opacity-70"
                                     })}>
                                     {item.seat}
                                 </Button>
@@ -303,10 +322,7 @@ const ChooseSeat = () => {
                                 <Button
                                     disabled={item?.isHas}
                                     onClick={() => {
-
-
                                         handleSeat("B", item)
-
                                     }}
                                     style={{
                                         cursor: "pointer",
@@ -315,7 +331,9 @@ const ChooseSeat = () => {
                                         color: seatB.some((seat: any) => seat?.seat == item?.seat) ? "primary" : "secondary",
                                         variant: "shadow",
                                         radius: "full",
-                                        size: "sm"
+                                        size: "sm",
+                                        className: "disabled:opacity-70"
+
                                     })}>
                                     {item.seat}
                                 </Button>
@@ -330,7 +348,7 @@ const ChooseSeat = () => {
                         allSeatListC.map((item: any, index: number) => (
                             <div key={index} className="relative" >
                                 <Button
-                                    isLoading={item?.isHas}
+                    
                                     disabled={item?.isHas}
                                     onClick={() => {
 
@@ -344,7 +362,9 @@ const ChooseSeat = () => {
                                         color: seatC.some((seat: any) => seat?.seat == item?.seat) ? "primary" : "secondary",
                                         variant: "shadow",
                                         radius: "full",
-                                        size: "sm"
+                                        size: "sm",
+                                        className: "disabled:opacity-70"
+
                                     })}>
                                     {item.seat}
                                 </Button>
@@ -374,7 +394,8 @@ const ChooseSeat = () => {
                                         color: seatD.some((seat: any) => seat?.seat == item?.seat) ? "primary" : "secondary",
                                         variant: "shadow",
                                         radius: "full",
-                                        size: "sm"
+                                        size: "sm",
+                                        className: "disabled:opacity-70"
                                     })}>
                                     {item.seat}
                                 </Button>
@@ -404,7 +425,9 @@ const ChooseSeat = () => {
                                         color: seatE.some((seat: any) => seat?.seat == item?.seat) ? "primary" : "secondary",
                                         variant: "shadow",
                                         radius: "full",
-                                        size: "sm"
+                                        size: "sm",
+                                        className: "disabled:opacity-70"
+
                                     })}>
                                     {item.seat}
                                 </Button>
@@ -434,7 +457,9 @@ const ChooseSeat = () => {
                                         color: seatF.some((seat: any) => seat?.seat == item?.seat) ? "primary" : "secondary",
                                         variant: "shadow",
                                         radius: "full",
-                                        size: "sm"
+                                        size: "sm",
+                                        className: "disabled:opacity-70"
+
                                     })}>
                                     {item?.seat}
                                 </Button>
@@ -447,8 +472,8 @@ const ChooseSeat = () => {
             </div>
             <div className="flex justify-center">
                 <Button
-                    onClick={() => navigate("/payment",{
-                        state:location.state
+                    onClick={() => navigate(`/payment${location.search}`, {
+                        state: location.state
                     })}
                     className={button({
                         color: "primary",

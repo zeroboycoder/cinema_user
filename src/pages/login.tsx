@@ -38,6 +38,7 @@ const Login = () => {
                         success: (res) => {
                             console.log(res,"isLoging")
                             localStorage.setItem("token", res.token)
+                            localStorage.setItem("userId", res.userId)
                             navigate('/')
                             return "Login Success"
                         }
